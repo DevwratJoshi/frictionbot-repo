@@ -1,10 +1,10 @@
 import cv2
 from pyzbar import pyzbar
-
+import imutils
 class QRCodeReader:
     def __init__(self):
         self.cap = cv2.VideoCapture(0)   
-        self.qrCodeDetector = cv2.QRCodeDetector()
+        # self.qrCodeDetector = cv2.QRCodeDetector()
         # This is a dictionary of known QR codes
         # Any newly detected code will be added in it if it begins with the substring "module" [:6]
         self.QR_codes = {}
@@ -24,37 +24,38 @@ class QRCodeReader:
         # When everything done, release the capture
         self.cap.release()
         cv2.destroyAllWindows()
-
-    def detect(self):
-        while True:
-            ret, frame = self.cap.read()
+    
+    def detect(self, frame):
+        gray = imutils.resize(frame, width=400)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        (thresh, gray) = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        # gray = cv2.GaussianBlur(gray, (3, 3), 0)
+        # gray = cv2.bilateralFilter(gray, 11, 17, 17)
+        # find the barcodes in the frame and decode each of the barcodes
         
-        	# find the barcodes in the frame and decode each of the barcodes
-	        
-            barcodes = pyzbar.decode(frame)
-            for barcode in barcodes:
-                # extract the bounding box location of the barcode and draw
-                # the bounding box surrounding the barcode on the image
-                (x, y, w, h) = barcode.rect
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                # the barcode data is a bytes object so if we want to draw it
-                # on our output image we need to convert it to a string first
-                barcodeData = barcode.data.decode("utf-8")
-                if(barcodeData[:6] == "module"):
-                    center = (int(x+w/2),int(y+h/2))
-                    self.QR_codes[barcodeData] = {"coords":center}
-                barcodeType = barcode.type
-                # draw the barcode data and barcode type on the image
-                text = "{}".format(barcodeData)
-                cv2.putText(frame, text, (x, y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        barcodes = pyzbar.decode(gray)
+        for barcode in barcodes:
+            # extract the bounding box location of the barcode and draw
+            # the bounding box surrounding the barcode on the image
+            (x, y, w, h) = barcode.rect
+            # cv2.circle(frame, (x,y), 8, (255,0,0), -1)
+            # the barcode data is a bytes object so if we want to draw it
+            # on our output image we need to convert it to a string first
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            barcodeData = barcode.data.decode("utf-8")
+            if(barcodeData[:6] == "module"):
+                center = (int(x+w/2),int(y+h/2))
+                self.QR_codes[barcodeData] = {"coords":center}
 
-            cv2.imshow('frame', frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
 
-        self.cap.release()
-        cv2.destroyAllWindows()
+            # barcodeType = barcode.type
+            # draw the barcode data and barcode type on the image
+            # text = "{}".format(barcodeData)
+            # cv2.putText(frame, text, (x, y - 10),
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
+
+
 if __name__ == '__main__':
     q = QRCodeReader()
 
@@ -67,7 +68,19 @@ if __name__ == '__main__':
         if i == 's':
             q.show_video()
         elif i == 'd':
-            q.detect()
+            while True:
+                ret, frame = q.cap.read()
+                q.detect(frame)
+                print("Codes found so far are: ")
+                for key in q.QR_codes:
+                    print(key)
+                    cv2.circle(frame, q.QR_codes[key]["coords"], 8, (255,0,0), -1)
+                cv2.imshow('frame', frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            q.cap.release()
+            cv2.destroyAllWindows()
+
         elif i == 'x':
             break
 
