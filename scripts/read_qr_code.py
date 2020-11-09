@@ -1,4 +1,5 @@
 import cv2
+from pyzbar import pyzbar
 
 class QRCodeReader:
     def __init__(self):
@@ -24,21 +25,28 @@ class QRCodeReader:
     def detect(self):
         while True:
             ret, frame = self.cap.read()
-            decodedText, points, _ = self.qrCodeDetector.detectAndDecode(frame)
-            if not points is None:
-                # The points list contains the corner coordinates of qr codes in the list
-                # The decodedText list contains decoded qr codes  in the same order as points
-                # TODO: Lower the frame rate to speed up the process
-                for point in points:
-                    print(point)
-                    for p in point:
-                        cv2.circle(frame, tuple(p), 10, (1.,0.,0.), -1)
-            else:
-                print("QR code not detected")
-            
+        
+        	# find the barcodes in the frame and decode each of the barcodes
+	        
+            barcodes = pyzbar.decode(frame)
+            for barcode in barcodes:
+                # extract the bounding box location of the barcode and draw
+                # the bounding box surrounding the barcode on the image
+                (x, y, w, h) = barcode.rect
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                # the barcode data is a bytes object so if we want to draw it
+                # on our output image we need to convert it to a string first
+                barcodeData = barcode.data.decode("utf-8")
+                barcodeType = barcode.type
+                # draw the barcode data and barcode type on the image
+                text = "{} ({})".format(barcodeData, barcodeType)
+                cv2.putText(frame, text, (x, y - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+
             cv2.imshow('frame', frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
+
         self.cap.release()
         cv2.destroyAllWindows()
 if __name__ == '__main__':
