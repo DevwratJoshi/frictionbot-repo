@@ -5,6 +5,9 @@ class QRCodeReader:
     def __init__(self):
         self.cap = cv2.VideoCapture(0)   
         self.qrCodeDetector = cv2.QRCodeDetector()
+        # This is a dictionary of known QR codes
+        # Any newly detected code will be added in it if it begins with the substring "module" [:6]
+        self.QR_codes = {}
     # Capture frame-by-frame
 
     def show_video(self):
@@ -37,9 +40,12 @@ class QRCodeReader:
                 # the barcode data is a bytes object so if we want to draw it
                 # on our output image we need to convert it to a string first
                 barcodeData = barcode.data.decode("utf-8")
+                if(barcodeData[:6] == "module"):
+                    center = (int(x+w/2),int(y+h/2))
+                    self.QR_codes[barcodeData] = {"coords":center}
                 barcodeType = barcode.type
                 # draw the barcode data and barcode type on the image
-                text = "{} ({})".format(barcodeData, barcodeType)
+                text = "{}".format(barcodeData)
                 cv2.putText(frame, text, (x, y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
