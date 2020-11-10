@@ -15,6 +15,8 @@
                 "-lopencv_imgproc",
 				"-lopencv_ximgproc",
 				"-lopencv_imgcodecs",
+				"-lopencv_videoio",
+				"-lopencv_aruco",
 				"-lzbar",
 				"-I/usr/include/opencv"
 			],
