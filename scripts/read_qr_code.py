@@ -31,8 +31,6 @@ class QRCodeReader:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         (thresh, gray) = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
         # TODO Pass a cropped window subsection of the image to the decoder to speed up the process
-        # gray = cv2.GaussianBlur(gray, (3, 3), 0)
-        # gray = cv2.bilateralFilter(gray, 11, 17, 17)
         # find the barcodes in the frame and decode each of the barcodes
         
         barcodes = pyzbar.decode(gray)
