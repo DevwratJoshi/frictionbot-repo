@@ -1,3 +1,5 @@
 # Ignore the qr code files
 qr_codes/
+aruco_codes/
 output/
+*.odp
