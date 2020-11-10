@@ -25,10 +25,12 @@ class QRCodeReader:
         self.cap.release()
         cv2.destroyAllWindows()
     
-    def detect(self, frame):
-        gray = imutils.resize(frame, width=400)
+    def detect(self):
+        ret, frame = self.cap.read()
+        #gray = imutils.resize(frame, width=400)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         (thresh, gray) = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        # TODO Pass a cropped window subsection of the image to the decoder to speed up the process
         # gray = cv2.GaussianBlur(gray, (3, 3), 0)
         # gray = cv2.bilateralFilter(gray, 11, 17, 17)
         # find the barcodes in the frame and decode each of the barcodes
@@ -53,7 +55,7 @@ class QRCodeReader:
             # text = "{}".format(barcodeData)
             # cv2.putText(frame, text, (x, y - 10),
             #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-
+        return frame
 
 
 if __name__ == '__main__':
@@ -68,9 +70,9 @@ if __name__ == '__main__':
         if i == 's':
             q.show_video()
         elif i == 'd':
+            frame = []
             while True:
-                ret, frame = q.cap.read()
-                q.detect(frame)
+                frame = q.detect()
                 print("Codes found so far are: ")
                 for key in q.QR_codes:
                     print(key)
