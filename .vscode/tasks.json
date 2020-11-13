@@ -18,7 +18,8 @@
 				"-lopencv_videoio",
 				"-lopencv_aruco",
 				"-lzbar",
-				"-I/usr/include/opencv"
+        "-I/usr/include/opencv",
+        "-pthread"
 			],
 			"options": {
 				"cwd": "/usr/bin"
