@@ -5,11 +5,12 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<thread>
+#include <unistd.h>
 // The id of the seed module. Defined here
 #define SEED_ID 1 
 // Separate distance values for high and low friction. Hysterisis for stability
-#define HIGH_FRICTION_THRESHOLD_DISTANCE 500 // If the distance to the seed is less than this, friction high
-#define LOW_FRICTION_THRESHOLD_DISTANCE 1000 // If distance to the seed is greater than this, friction low
+#define HIGH_FRICTION_THRESHOLD_DISTANCE 100 // If the distance to the seed is less than this, friction high
+#define LOW_FRICTION_THRESHOLD_DISTANCE 200 // If distance to the seed is greater than this, friction low
 typedef struct 
 {
   int id; // The id of the module
@@ -31,7 +32,8 @@ class CentralController
   private:
   void evaluate_module_states();
   module_state get_module_state_from_marker_state(marker_state state);
-  
+  float high_fric_dist_thresh_pixels; // The threshold distances in pixels 
+  float low_fric_dist_thresh_pixels;  // Calculated using the mm to pixel conversion factor stored by the marker reader
   bool update_state_flag;
   std::thread thr1;
 };
@@ -40,6 +42,9 @@ CentralController::CentralController():update_state_flag(true)
 {
   // Initialize the thread keep getting detected AR markers and their positions
   this->thr1 = std::thread(&CentralController::store_module_states, this);
+  this->high_fric_dist_thresh_pixels = 0.;
+  this->low_fric_dist_thresh_pixels = 0.;
+
 
 }
 CentralController::~CentralController()
@@ -66,6 +71,7 @@ module_state CentralController::get_module_state_from_marker_state(marker_state 
 {
   module_state m;
   m.id = state.id;
+  m.high_friction = false;
   // TODO: Add a section to convert screen coordinates to real-world coordinates if required. 
   // Directly saving screen coordinates as real world coordinates for now
 
@@ -90,7 +96,8 @@ void CentralController::evaluate_module_states()
       if(this->module_states[i].id == mr_s.id)
       {
         // Update the stored marker position
-        this->module_states[i] = mo_s;  
+        this->module_states[i].position[0] = mo_s.position[0];  
+        this->module_states[i].position[1] = mo_s.position[1];  
         module_info_stored = true;
         break;
       }
@@ -129,11 +136,11 @@ void CentralController::evaluate_module_states()
   for(int i = 0; i < this->module_states.size(); i++)
   {
     float distance_from_seed = sqrt(pow((this->module_states[i].position[0] - seed_module_state.position[0]),2) + pow((this->module_states[i].position[1] - seed_module_state.position[1]),2));
-    if(distance_from_seed < HIGH_FRICTION_THRESHOLD_DISTANCE)
+    if(distance_from_seed < this->high_fric_dist_thresh_pixels)
     {
       this->module_states[i].high_friction = true;
     }
-    else if(distance_from_seed > LOW_FRICTION_THRESHOLD_DISTANCE)
+    if(distance_from_seed > this->low_fric_dist_thresh_pixels)
     {
       this->module_states[i].high_friction = false;
     }
@@ -142,7 +149,7 @@ void CentralController::evaluate_module_states()
 
 void CentralController::store_module_states()
 {
-  cv::VideoCapture cap(0);
+  cv::VideoCapture cap(-1);
   while(this->update_state_flag)
   {
       cv::Mat frame;
@@ -157,23 +164,51 @@ void CentralController::store_module_states()
       }
 
       this->reader.detect_markers(frame);
+      // Use pixel to mm conversion factor to get distance thresholds in pixels
+      this->high_fric_dist_thresh_pixels = this->reader.current_pixels_per_mm * HIGH_FRICTION_THRESHOLD_DISTANCE;
+      this->low_fric_dist_thresh_pixels = this->reader.current_pixels_per_mm * LOW_FRICTION_THRESHOLD_DISTANCE;
+
       //std::cout << reader.markers.size() << " markers detected in this frame" << std::endl;
       // Use the states gotten in this frame to get the distance from the seed 
       // Store the resulting required module state (high-friction/low-friction mode)
       this->evaluate_module_states();
-
+      
       // Overlay the markers with the appropriate colors to show module type
 
     
       for(module_state m : this->module_states)
       {
         if(m.id == SEED_ID)
-          cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), 10, cv::Scalar(0,0,255), -1, cv::FILLED,0);
+        {
+          // Circle to show the range for high friction modules
+          try
+          {
+            cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), 10, cv::Scalar(0,0,255), -1, cv::FILLED,0);
+            cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), this->high_fric_dist_thresh_pixels, cv::Scalar(0,0,255), 4, cv::FILLED,0);
+            cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), this->low_fric_dist_thresh_pixels, cv::Scalar(0,255,0), 4, cv::FILLED,0);
+          }
+          catch(cv::Exception e)
+          {
+            std::cout << "Could not show the circle \n";
+          }
+          
+        }
+        
         else
-          cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), 10, cv::Scalar(255,255,0), -1, cv::FILLED,0);
+        {
+          cv::Scalar col;
+          if(m.high_friction)
+            col = cv::Scalar(0,0,255);
+          else
+            col = cv::Scalar(0,255,0);
+
+          cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), 10, col, -1, cv::FILLED,0);
+        }
 
       }
-      
+      std::string s = "Pixels per mm = " + std::to_string(reader.current_pixels_per_mm);
+      cv::putText(frame, s, cv::Point(10, frame.size().height-100), 
+                  cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
       // Display the resulting frame
       cv::imshow("Frame", frame );
 
@@ -234,7 +269,7 @@ int main()
   // Accept client connections while running
   while (true)
   {
-    listen(server_socket, 1);
+    listen(server_socket, 50);
 
     int client_socket;
     // Accept a connection and get a socket handle (somehow an int)
@@ -264,6 +299,7 @@ int main()
     }
 
     send(client_socket, server_message, sizeof(server_message), 0);
+    // close(client_socket);
   }
 
   return 0;
