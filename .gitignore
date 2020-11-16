@@ -3,3 +3,4 @@ qr_codes/
 aruco_codes/
 output/
 *.odp
+config.py
