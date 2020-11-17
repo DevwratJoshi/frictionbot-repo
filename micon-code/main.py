@@ -15,7 +15,8 @@ red_led.value(0)
 green_led.value(0)
 start_time = time.ticks_ms()
 
-while time.ticks_diff(time.ticks_ms(), start_time) < maxTime*1000:
+# while time.ticks_diff(time.ticks_ms(), start_time) < maxTime*1000:
+while True:
   if fric.query_friction_value():
     if(fric.high_friction):
       red_led.value(1)
