@@ -4,3 +4,8 @@ aruco_codes/
 output/
 *.odp
 config.py
+*.txt
+data/
+*.class
+*.java
+delete_this/
