@@ -1,7 +1,7 @@
 int PUL=10; //define Pulse pin
 int DIR=9; //define Direction pin
 int ENA=5; //define Enable Pin
-int del = 50;
+int del = 20;
 // 6400 steps = 1 rotation of the stapper shaft
 // 1 rotation is 71.41 mm
 float steps_per_rotation = 6400;
@@ -9,11 +9,13 @@ float distance_per_rotation = 0.07141;
 // Set amplitude to 10 cm
 float amplitude = 0.3; 
 bool move_flag = false;
+long count = 0;
 void setup() {
   pinMode (PUL, OUTPUT);
   pinMode (DIR, OUTPUT);
   pinMode (ENA, OUTPUT);
   Serial.begin(9600);
+  move_flag = false;
 }
 // The delay is inversely proportional to the velocity. 
 // A smaller deley means a larger velocity.
@@ -52,6 +54,7 @@ void loop() {
         digitalWrite(PUL,LOW);
         delayMicroseconds(del);
       }
+      Serial.println(count);
   }
 
   else

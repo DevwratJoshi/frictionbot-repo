@@ -1,0 +1,5 @@
+{
+    "board": "arduino:avr:uno",
+    "port": "/dev/ttyS0",
+    "sketch": "Arduino_code/linear_actuator_basic_test/linear_actuator_basic_test.ino"
+}
