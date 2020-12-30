@@ -9,6 +9,7 @@ class Robot
   float friction_with_bed;
   float e;
   char type; // 's' for segregator and 'm' for mover
+  int segregator_id;
   public boolean bigProb; // true if the module will become big under the line, else false
   public boolean increasing;
   public boolean decreasing;
@@ -20,17 +21,19 @@ class Robot
   {
     r = radius;
     bigProb = prob;
-    density = d;
+    mass = 1.0;
+    density = d; 
     e = 0.5;
     friction = 0.1;
     friction_with_bed = bed_fric;
-    mass = PI*(radius*radius/(10000)) * d; // Divided by 10000 cause to resolve the pixel to meter ratio
     type = t;
     makeBody(new Vec2(x, y));
     increasing = false;
     decreasing = false;
     last_position = new Vec2(0,0);
     isSeed = false;
+    segregator_id = 0;
+    
     switch(c)
     {
      case 'r':
@@ -57,6 +60,11 @@ class Robot
      break;
     }
   }
+  
+   void set_id(int id) // Set the segregator id to store positions
+   {
+    segregator_id = id; 
+   }
   
   void killBody()
   {
@@ -113,7 +121,7 @@ class Robot
     //rect(0,0,w,h);
     ellipse(0, 0, r*2, r*2);
     fill(0);
-    textSize(20);
+    textSize(15);
     text(str(friction_with_bed), -15,9); 
     popMatrix();
   }
@@ -142,60 +150,60 @@ class Robot
   
  }
   // the following function would change the value of the radius slowly to get the goal radius eventually 
- boolean changeRadius(float goal_rad)
- {
+ //boolean changeRadius(float goal_rad)
+ //{
    
-    float rate = 0.2; // The rate of increase/decrease of the radius
+ //   float rate = 0.2; // The rate of increase/decrease of the radius
     
-    if(r <= goal_rad)
-    {
-      increasing = true;
-      density = density_large;
-      if(goal_rad - r < rate)
-      {
-        r = goal_rad;
-        increasing = false;
-        return true;
-      }
+ //   if(r <= goal_rad)
+ //   {
+ //     increasing = true;
+ //     density = density_large;
+ //     if(goal_rad - r < rate)
+ //     {
+ //       r = goal_rad;
+ //       increasing = false;
+ //       return true;
+ //     }
 
-    }
+ //   }
     
     
-    else if(r > goal_rad)
-    {
-      density = density_small;
-      decreasing = true;
-      if(r - goal_rad < rate) // Return if the difference between the two radii is less than the rate, no point editing it anymore
-      {
-        r = goal_rad;
-      decreasing = false; 
-      return true;
-      }
-      rate = -rate;
+ //   else if(r > goal_rad)
+ //   {
+ //     density = density_small;
+ //     decreasing = true;
+ //     if(r - goal_rad < rate) // Return if the difference between the two radii is less than the rate, no point editing it anymore
+ //     {
+ //       r = goal_rad;
+ //     decreasing = false; 
+ //     return true;
+ //     }
+ //     rate = -rate;
       
-    }
+ //   }
     
-    r = r + rate;
+ //   r = r + rate;
     
     
-    Fixture fixture = body.getFixtureList();
+ //   Fixture fixture = body.getFixtureList();
 
-     body.destroyFixture(fixture);
-     CircleShape circle = new CircleShape();
-     circle.m_radius = box2d.scalarPixelsToWorld(r);
-     circle.m_p.set(0, 0);
+ //    body.destroyFixture(fixture);
+ //    CircleShape circle = new CircleShape();
+ //    circle.m_radius = box2d.scalarPixelsToWorld(r);
+ //    circle.m_p.set(0, 0);
   
-      FixtureDef fd = new FixtureDef();
-      fd.shape = circle;
-      // Parameters that affect physics
-      fd.density = density;
-      fd.friction = friction;
-      fd.restitution = e;
+ //     FixtureDef fd = new FixtureDef();
+ //     fd.shape = circle;
+ //     // Parameters that affect physics
+ //     fd.density = density;
+ //     fd.friction = friction;
+ //     fd.restitution = e;
       
-  body.createFixture(fd);
+ // body.createFixture(fd);
      
-     return false;
- }
+ //    return false;
+ //}
  
   void changeFriction(float f)
  {
