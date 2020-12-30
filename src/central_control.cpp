@@ -103,7 +103,7 @@ void CentralController::evaluate_module_states()
       }
     }
     // If not registered, add it to the stored module list
-    if(!module_info_stored)
+    if(!module_info_stored && mo_s.id > 0 && mo_s.id < 11)
     {
       this->module_states.push_back(mo_s);
     }
@@ -183,7 +183,7 @@ void CentralController::store_module_states()
           // Circle to show the range for high friction modules
           try
           {
-            cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), 10, cv::Scalar(0,0,255), -1, cv::FILLED,0);
+            cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), 10, cv::Scalar(255,0,0), -1, cv::FILLED,0);
             cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), this->high_fric_dist_thresh_pixels, cv::Scalar(0,0,255), 4, cv::FILLED,0);
             cv::circle(frame, cv::Point((int)m.position[0], (int)m.position[1]), this->low_fric_dist_thresh_pixels, cv::Scalar(0,255,0), 4, cv::FILLED,0);
           }
