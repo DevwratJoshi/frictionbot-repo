@@ -14,8 +14,8 @@ final int DELAY = 300;
 // A list for all of our rectangles
 ArrayList<Robot> robots;
 Ground ground;
-int no_of_robots = 50;
-int movers = 318;
+int no_of_robots = 80;
+  int movers = 318;
 int segregators = 2;
 float mover_small_frac = 1.0;
 int small_movers = int(movers*mover_small_frac);
@@ -28,7 +28,7 @@ float mid = 25;
 
 Vec2 robot1_pos;
 Vec2 robot2_pos;
-float seperation = small*2.0*18;          
+float seperation = small*2.0*7;          
 
 
 
@@ -53,25 +53,25 @@ Vec2 temp_mouse = new Vec2();
 boolean mouseActive;
 int max_record = 10000;
 String blah;
-
+float packing_fraction;
 void setup()
 {
-  size(2000, 1000);
+  size(1200, 800);
   smooth();
  
   box2d = new Box2DProcessing(this, 100);
   box2d.createWorld();
   mean_box_height = 11*height/12;
 
-  box2d.setGravity(0, 0);
+  box2d.setGravity(0., 0.);
 box = new Box(width/2, height/2 + box_height/2 + box_edge_width/2, 'k');
   robots = new ArrayList<Robot>();
   
   Vec2 boxp = box.checkPos();
   
  
-  robot1_pos = new Vec2(boxp.x, boxp.y - box_edge_width/2 - box_height/2);
-  robot2_pos = new Vec2(boxp.x + seperation, boxp.y - box_edge_width/2 - box_height/2);
+  robot1_pos = new Vec2(boxp.x - seperation/2.0, boxp.y - box_edge_width/2 - box_height/2);
+  robot2_pos = new Vec2(boxp.x + seperation/2.0, boxp.y - box_edge_width/2 - box_height/2);
   
   Robot r1 = new Robot(robot1_pos.x, robot1_pos.y, small, 'r', 's');
   robots.add(r1);
@@ -85,7 +85,7 @@ box = new Box(width/2, height/2 + box_height/2 + box_edge_width/2, 'k');
   amplitude = (int)(small*4);
   ground = new Ground();
 
-  blah = "initial_positions" + ".txt";
+  blah = "initial_7_symmetric/initial_10" + ".txt";
     output = createWriter(blah);
 
 }
@@ -140,11 +140,7 @@ void draw() {
    r.applyRandomVelocity(10); //Velocity of magnitude 2 in a random direction
   }
   
-   }
-
-
-    
-  
+ }
 
   // We must always step through time!
   box2d.step();
@@ -171,12 +167,19 @@ if(count >= no_of_robots)
   fill(0, 102, 153);
   textSize(32);
   text("Done", width/2, 90); 
+  packing_fraction =0.;
+  for (Robot r:robots)
+  {
+   packing_fraction += PI*r.r*r.r; 
+  }
+  packing_fraction = packing_fraction/(box_bottom*box_height);
+  text("Packing fraction = " + packing_fraction, 120, 100);
   popMatrix();
   
  for(Robot r: robots)
   {
     if(r.type == 'm')
-   r.applyRandomVelocity(0.0); 
+   r.setLinVel(new Vec2(0.0,0.0)); 
   }
 }
 

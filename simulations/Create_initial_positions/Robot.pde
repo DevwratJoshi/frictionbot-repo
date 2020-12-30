@@ -1,4 +1,4 @@
-class Robot
+  class Robot
 {
   Body body;
   float r;
@@ -184,6 +184,10 @@ class Robot
   {
    Vec2 pos = box2d.getBodyPixelCoord(body);
    return pos;
+  }
+  void setLinVel(Vec2 vel)
+  {
+    body.setLinearVelocity(vel);
   }
   
   void applyRandomVelocity(float vel)
