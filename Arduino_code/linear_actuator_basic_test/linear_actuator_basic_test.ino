@@ -1,7 +1,7 @@
 int PUL=10; //define Pulse pin
 int DIR=9; //define Direction pin
 int ENA=5; //define Enable Pin
-int del = 20;
+int del = 100;
 // 6400 steps = 1 rotation of the stapper shaft
 // 1 rotation is 71.41 mm
 float steps_per_rotation = 6400;

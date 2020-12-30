@@ -55,7 +55,7 @@ float calculate_velocity(float pos, float freq, float amplitude)
   float constVelo = 0.001; // 1mm per second
   float maxVelo = 0.;
   float mean_box_xpos = amplitude;
-  maxVelo = 2.0*3.14159*freq*amplitude;
+  maxVelo = 2.0*3.14159*freq*2.0*amplitude;
   //maxVelo = 0.01;
   constVelo = 0.1*maxVelo;
   if(constVelo < 0.02)
@@ -78,7 +78,7 @@ float calculate_velocity(float pos, float freq, float amplitude)
     //new_velocity = maxVelo*sin(map(pos, 0.0, amplitude*2.0, radians(6), PI-radians(6)));
     // Using linear interpolation instead of mapping
 
-    new_velocity = maxVelo*sin(interpolate1D(pos, 0.0, amplitude*2.0, radians(6), PI-radians(6)));
+    new_velocity = maxVelo*sin(interpolate1D(pos, 0.0, amplitude*2.0, radians(1), PI-radians(1)));
     if (velocityDirection == -1)
     {
       new_velocity = -1*abs(new_velocity);
@@ -95,7 +95,7 @@ void setup()
   pinMode (PUL, OUTPUT);
   pinMode (DIR, OUTPUT);
   pinMode (ENA, OUTPUT);
-  Serial.begin(115200);
+  Serial.begin(9600);
   PUL=10; //define Pulse pin
   DIR=9; //define Direction pin
   ENA=5; //define Enable Pin
@@ -106,8 +106,8 @@ void setup()
   distance_per_step = distance_per_rotation/steps_per_rotation;
   steps_per_metre = steps_per_rotation/distance_per_rotation;
   // Set amplitude to 30 cm
-  amplitude = 0.15; // IMP: This is the peak amplitude and not the peak-to-peak amplitude 
-  frequency = 0.5;
+  amplitude = 0.1; // IMP: This is the peak amplitude and not the peak-to-peak amplitude 
+  frequency = 1.0;
   current_step = 0;
   velocityDirection = 1; // Will move toward the motor first
   // This many steps will be taken for one velocity value (90 steps is about 1mm) 
