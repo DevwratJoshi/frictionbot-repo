@@ -31,7 +31,7 @@ if len(sys.argv) < 4:
 
 seperation_list = ['2', '3','4', '5', '6', '7'] #The length of the flashlight in mid module lengths
 frequency_list = [str(round(i, 1)) for i in np.linspace(0.3, 0.9, 7)]
-amplitude_list = [str(int(i)) for i in np.linspace(3*module_length/2, (module_length/2)*10, 8)]
+amplitude_list = [str(int(i)) for i in np.linspace(module_length/2, (module_length/2)*10, 10)]
 list1 = []
 list2 = []
 input_list = [str(i) for i in range(1, 11)] # The input file numbers
@@ -117,7 +117,7 @@ cmap = plt.get_cmap('RdBu')
 im = ax.pcolormesh(list1 + ['0'], list2 + ['0'], np.transpose(xData), cmap=cmap, norm=MidpointNormalize(0.0, 1.0, 0.5))
 cb = fig.colorbar(im, ax=ax)
 cb.set_ticks(np.arange(0.0, 1.1, 0.1))
-ax.set_title("Migration along X axis")
+ax.set_title("Probability of segregators touching")
 
 
 
