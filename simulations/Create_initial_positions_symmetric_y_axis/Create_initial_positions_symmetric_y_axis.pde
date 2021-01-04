@@ -28,7 +28,7 @@ float mid = 25;
 
 Vec2 robot1_pos;
 Vec2 robot2_pos;
-float seperation = small*2.0*7;          
+float seperation = small*2.0*2;          
 
 
 
@@ -85,7 +85,7 @@ box = new Box(width/2, height/2 + box_height/2 + box_edge_width/2, 'k');
   amplitude = (int)(small*4);
   ground = new Ground();
 
-  blah = "initial_7_symmetric/initial_10" + ".txt";
+  blah = "initial_2_symmetric/initial_2" + ".txt";
     output = createWriter(blah);
 
 }
