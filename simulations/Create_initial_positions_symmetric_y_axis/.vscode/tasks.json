@@ -16,11 +16,11 @@
         "panel": "dedicated"
       },
       "args": [
-        "--force",
-        "--sketch=${workspaceRoot}",
-        "--output=${workspaceRoot}/out",
-        "--run"
-      ],
+		"--force",
+		"--sketch=${workspaceRoot}",
+		"--output=${workspaceRoot}/out",
+		"--run"
+	  ],
       "windows": {
         "type": "process",
         "args": [
@@ -36,25 +36,6 @@
           "--run"
         ]
       }
-    },
-    {
-      "type": "cppbuild",
-      "label": "C/C++: cpp build active file",
-      "command": "/usr/bin/cpp",
-      "args": [
-        "-g",
-        "${file}",
-        "-o",
-        "${fileDirname}/${fileBasenameNoExtension}"
-      ],
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "problemMatcher": [
-        "$gcc"
-      ],
-      "group": "build",
-      "detail": "compiler: /usr/bin/cpp"
     }
   ]
 }

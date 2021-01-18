@@ -1,0 +1,3 @@
+This sim will store the initial and final postions of all the robots in the swarm. [row0, row1, row2] are [x_position, y_position, high/low friction]
+
+Top half of the rows are initial position, bottom half of the rows are the final position

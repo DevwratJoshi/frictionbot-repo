@@ -14,13 +14,11 @@ final int DELAY = 300;
 // A list for all of our rectangles
 ArrayList<Robot> robots;
 Ground ground;
-int no_of_robots = 44;
-int movers = 318;
-int segregators = 2;
-float mover_small_frac = 1.0;
-int small_movers = int(movers*mover_small_frac);
-int large_movers = movers - small_movers;
-
+int no_of_robots = 267; // 267 for 40 by 10
+int high_mobility = 134;
+int low_mobility =  133;
+int low_mob_count = 0;
+int high_mob_count = 0;
 boolean box_pause = true;
 int small = 20;
 float big = small*1.73;
@@ -28,15 +26,6 @@ float mid = 25;
 
 Vec2 robot1_pos;
 Vec2 robot2_pos;
-float x_separation = small*2.0*3;
-String x_sep_name_list[] = {"2", "3", "4"}; //"4", "6", "8", "10", "12", "14", "16", "18", "20"};
-float x_seps[] = {2, 3,4}; //4, 6, 8, 10, 12, 14, 16, 18, 20};
-//String y_sep_name_list[] = {"0", "1", "2", "3", "4", "5", "6"};
-String y_sep_name_list[] = {"0"};
-float y_seps[] = {0};
-
-float y_separation = small*2.0*2.5;
-
 
 int count = 0;
 char flag = 'n';
@@ -45,13 +34,13 @@ Vec2 vel = new Vec2();
 
 int freq = 60;
 int delay = 0;
-int record = 0;
+int record = 0;                                                                                                                                                                                                        
 
 char b = 'n';
-float box_bottom = small*2*11.0;
-float box_height = small*2*6.0;
+float box_bottom = small*2*40.0;
+float box_height = small*2*10.0;
 float box_edge_width = 40;
-int mean_box_height;
+float mean_box_height;
 int velocityDirection;
 int amplitude = int(small*6);
 Vec2 mouse1, mouse2;
@@ -60,14 +49,7 @@ boolean mouseActive;
 int max_record = 10000;
 String blah;
 float packing_fraction;
-
-int y_sep_counter = 0;
-int y_sep_counter_initial =0;
-int x_sep_counter = 0;
-int x_sep_counter_initial = 0;
-
-
-int in_counter = 1;
+int in_counter = 0;
 int initial_in_counter = 1;
 int in_counter_step = 1;
 int in_counter_final =10;
@@ -76,80 +58,90 @@ boolean exitFlag = false;
 
 void setup()
 {
-  frameRate(400);
-  size(1200, 800);
-  smooth();
- 
+  frameRate(1000);
+  size(2000, 800);
+  smooth();    
   box2d = new Box2DProcessing(this, 100);
   box2d.createWorld();
-  mean_box_height = 11*height/12;
+  mean_box_height = height/2 + box_height/2 + box_edge_width/2;
   in_counter = 0;
   box2d.setGravity(0., 0.);
-box = new Box(width/2, height/2 + box_height/2 + box_edge_width/2, 'k');
+  box = new Box(width/2, mean_box_height, 'k');
   robots = new ArrayList<Robot>();
-  
-
   amplitude = (int)(small*4);
   ground = new Ground();
   blah = "initial_x3_y2-5/initial_10" + ".txt";
-    
-
 }
 void draw() {
   background(255);
 
-  if(count == 0)
+  if(steps == 0)
   {
     
      in_counter += 1;
+     println("in_counter = " + in_counter);
     if(in_counter > in_counter_final)
     {
        in_counter = initial_in_counter; 
-       y_sep_counter += 1;  
-       if(y_sep_counter >= y_sep_name_list.length)
-         {
-           y_sep_counter  = y_sep_counter_initial;
-           x_sep_counter += 1;
-          
-           if(x_sep_counter >= x_sep_name_list.length)
-           {
-             x_sep_counter = x_sep_counter_initial;
-              exitFlag = true;
-               exit();
-           }
-        } 
+       exit();
+             
      } 
-     
-     if(!exitFlag)
-     create_segregators(x_seps[x_sep_counter]*2.0*small, y_seps[y_sep_counter]*2.0*small); // This increases the count by number of segregators
-  }
+  }  
   if (count < no_of_robots && random(1) < 0.8)
   {
-   float ran = random(1);
     
     Vec2 new_pos = new Vec2();
-    
-    for(int i = 0; i < 100; i++)
+    boolean space_available = false;
+    if(high_mobility > high_mob_count)
     {
-      new_pos.x = random(0, width);
-      new_pos.y = random(0, height);
-      
-     if(checkPosAvailable(new_pos, small))
-     {
+     for(int i = 0; i < 100; i++)
+      {
+        new_pos.x = random(0, width);
+        new_pos.y = random(0, height);
+        
+       if(checkPosAvailable(new_pos, small))
+       {
+        space_available = true;
+        break; 
+       }
+       
+      }
+        if(space_available)
+          {
             Robot p = new Robot(new_pos.x, new_pos.y, small, 'g', 'm');
-      
-      robots.add(p);
-      count++;
-      break;
-     }
+            robots.add(p);
+            count++;
+            high_mob_count++;
+          }
+    }
+    space_available = false;
+    if(low_mobility > low_mob_count)
+    {
+       for(int i = 0; i < 100; i++)
+      {
+        new_pos.x = random(0, width);
+        new_pos.y = random(0, height);
+        
+       if(checkPosAvailable(new_pos, small))
+       {
+        space_available = true;
+        break; 
+       }
+      }
+    if(space_available)
+          {
+              Robot p = new Robot(new_pos.x, new_pos.y, small, 'r', 's');
+              robots.add(p);
+              count++;
+              low_mob_count++;
+          }
     }
     
   for(Robot r: robots)
   {
-   if (r.type == 'm')
-   r.applyRandomVelocity(2); //Velocity of magnitude 2 in a random direction
+   r.applyRandomVelocity(2.5); //Velocity of magnitude 2 in a random direction
   }
-  
+    
  }
 
   // We must always step through time!
@@ -167,8 +159,12 @@ void draw() {
 
   if(count >= no_of_robots)
   {
+    println("Count greater than no of robots");
      count = 0;
-     write_to_file("initial_positions/box_width_11/" + "initial_x" + x_sep_name_list[x_sep_counter] + "_y" + y_sep_name_list[y_sep_counter] + "/initial_" + str(in_counter) + ".txt");
+     steps = 0;
+     high_mob_count = 0;
+     low_mob_count = 0;
+     write_to_file("initial_positions/box_width_40" + "/initial_" + str(in_counter) + ".txt");
      for (int i = robots.size()-1; i >= 0; i--)
        {
         Robot p = robots.get(i);
@@ -200,33 +196,14 @@ boolean checkPosAvailable(Vec2 pos, float rad)
   }
   return true;
 }
-void create_segregators(float x_sep, float y_sep)
-{
- ////// Thi is currently hardcoded to have 2 segregators, as that is all I need. Change later to take arguments if required
-   Vec2 boxp = box.checkPos();
-  
- 
-  robot1_pos = new Vec2(boxp.x - x_sep/2.0, boxp.y - box_edge_width/2 - box_height/2 - y_sep/2.0);
-  robot2_pos = new Vec2(boxp.x + x_sep/2.0, boxp.y - box_edge_width/2 - box_height/2 + y_sep/2.0);
-  
-  Robot r1 = new Robot(robot1_pos.x, robot1_pos.y, big, 'r', 's');
-  robots.add(r1);
-  segregators--;
-  count++;
-  
-  Robot r2 = new Robot(robot2_pos.x, robot2_pos.y, big, 'r', 's');
-  robots.add(r2);
-  segregators--;
-  count++;
- 
-}
+
 void write_to_file(String file_name)
 {
   PrintWriter output;
   output = createWriter(file_name);
  int type;
   int r;
-  println(segregators + " " + large_movers +  " " + small_movers + "  " + count);
+  println(high_mobility + " " + low_mobility + "  " + count);
   for (int i = robots.size()-1; i >= 0; i--) {
     Robot p = robots.get(i);
 
@@ -265,7 +242,7 @@ boolean robot_in_box(Vec2 pos, float rad)
 {
   Vec2 b_pos = box.checkPos();
   if(b_pos.x - box_bottom/2 + rad <= pos.x && b_pos.x + box_bottom/2 - rad >= pos.x && b_pos.y - box.checkWidth()/2 - rad >= pos.y && b_pos.y - box.checkWidth()/2 - box.checkHeight() + rad <= pos.y)
-  return true;
+    return true;
   
   return false;
   

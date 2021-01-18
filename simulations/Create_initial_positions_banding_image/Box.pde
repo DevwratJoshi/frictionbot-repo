@@ -5,25 +5,34 @@ class Box
   float w;
   float h;
   int vel_direction; // The direction of the velocity 
-  char type = 's';
+  char boxType; // This variable will decide whether the box is kinematic or dynamic. This is because the box shakes best as a kinematic body, but needs to be a dynamic body to touch the ground and collect data. 
+  
   Body body;
   Body anchor1, anchor2;
   
-  Box(float x_, float y_, char t)
+  Box(float x_, float y_, char type)
   {
      x = x_;
      y = y_; 
      w = box_edge_width;
      h = box_height;
      vel_direction = -1;
-     type = t;
+     boxType = type;
     makeBody(new Vec2(x, y)); // THis will be the middle of the bottom section of the box
   }
   
   void display()
-  {
+  {  
+    if(boxType == 'k')
+    {
      fill(0, 150, 150);
-     noStroke();
+    }
+    
+    else
+    {
+       fill(150, 150, 0);
+    } 
+    noStroke();
      rectMode(CENTER);
      
      //float a = b.getAngle();
@@ -56,8 +65,7 @@ class Box
     float box2dW = box2d.scalarPixelsToWorld(box_bottom/2);
     float box2dH = box2d.scalarPixelsToWorld(w/2);
     bs.setAsBox(box2dW, box2dH);
-   
-
+    
     Vec2[] verticesl = new Vec2[4];  // An array of 4 vectors
     verticesl[0] = box2d.vectorPixelsToWorld(new Vec2((-box_bottom/2)-w, -h - w/2));
     verticesl[1] =box2d.vectorPixelsToWorld(new Vec2(-box_bottom/2, -h - w/2));
@@ -69,7 +77,7 @@ class Box
     ls.set(verticesl, verticesl.length);
     
      Vec2[] verticesr = new Vec2[4];  // An array of 4 vectors
-    verticesr[0] = box2d.vectorPixelsToWorld(new Vec2((box_bottom/2)+w, -h- w/2));
+    verticesr[0] = box2d.vectorPixelsToWorld(new Vec2((box_bottom/2), -h- w/2));
     verticesr[1] = box2d.vectorPixelsToWorld(new Vec2((box_bottom/2) + w, - w/2 ));
     verticesr[2] = box2d.vectorPixelsToWorld(new Vec2(box_bottom/2, -w/2));
     verticesr[3] = box2d.vectorPixelsToWorld(new Vec2((box_bottom/2), -h -w/2));
@@ -77,8 +85,9 @@ class Box
     PolygonShape rs = new PolygonShape();
     rs.set(verticesr, verticesr.length);
     
-    //The following is a roof section
-    Vec2[] verticest = new Vec2[4];  // An array of 4 vectors
+    
+    // This is the roof fixture of the box. In here because the box now will have an arbitrary biasing force acting on it
+     Vec2[] verticest = new Vec2[4];  // An array of 4 vectors
     verticest[0] = box2d.vectorPixelsToWorld(new Vec2((box_bottom/2), -h- w/2 - w));
     verticest[1] = box2d.vectorPixelsToWorld(new Vec2((box_bottom/2), -h - w/2 ));
     verticest[2] = box2d.vectorPixelsToWorld(new Vec2(-box_bottom/2, -h-w/2));
@@ -86,7 +95,6 @@ class Box
     //[full] Making a polygon from that array
     PolygonShape ts = new PolygonShape();
     ts.set(verticest, verticest.length);
-    
     
     ////// The last fixture is attached to the bottom side of the box so that it does not bounce against the ground
      
@@ -101,18 +109,20 @@ class Box
     neb.set(verticesne, verticesne.length);
     
    // rs.setAsBox(box2dW, box2dH);
-    
-    
+
     BodyDef bd = new BodyDef();
-    if(type == 'd')
+    if(boxType == 'k')
     {
-      bd.type = BodyType.KINEMATIC;
+       bd.type = BodyType.KINEMATIC;
     }
-    else
-      bd.type = BodyType.STATIC;
     
+    else
+    {
+      bd.type = BodyType.DYNAMIC;
+    }
     bd.position.set(box2d.coordPixelsToWorld(center));
     body = box2d.createBody(bd);
+    
     BodyDef anc1= new BodyDef();
     anc1.type = BodyType.STATIC;
     anc1.position.set(box2d.coordPixelsToWorld(width/2, height));
@@ -126,32 +136,33 @@ class Box
    FixtureDef bs_fd = new FixtureDef();
    bs_fd.shape = bs;
     bs_fd.density = 1;
-    bs_fd.friction = 0.01;
-    bs_fd.restitution = 0.1;
+    bs_fd.friction = 0.5;
+    bs_fd.restitution = 0.9;
     
     FixtureDef ls_fd = new FixtureDef();
     ls_fd.shape = ls;
     ls_fd.density = 1;
     ls_fd.friction = 0.5;
-    ls_fd.restitution = 0.1;
+    ls_fd.restitution = 0.9;
     
     FixtureDef rs_fd = new FixtureDef();
     rs_fd.shape = rs;
     rs_fd.density = 1;
     rs_fd.friction = 0.5;
-    rs_fd.restitution = 0.1;
+    rs_fd.restitution = 0.9;
     
     FixtureDef ts_fd = new FixtureDef();
     ts_fd.shape = ts; 
     ts_fd.density = 1;
     ts_fd.friction = 0.5;
-    ts_fd.restitution = 0.1;
+    ts_fd.restitution = 0.9;
     
     FixtureDef neb_fd = new FixtureDef();
     neb_fd.shape = neb;
     neb_fd.density = 1;
     neb_fd.friction = 0.5;
     neb_fd.restitution = 0.01;
+    
     // Define the body and make it from the shape
     body.createFixture(bs_fd);
     body.createFixture(ls_fd);
@@ -164,6 +175,7 @@ class Box
     body.setAngularVelocity(random(-5, 5));
     */
     
+    //The following is to keep the box upright. It tends to tilt from side to side if it is shaken as a dynamic body
     PrismaticJointDef prj1  = new PrismaticJointDef();
     prj1.bodyA = anchor1;
     prj1.bodyB = body;
@@ -183,26 +195,26 @@ class Box
     body.applyForce(force, pos);
   }
   
-      void applyVelocity(Vec2 vel)
-    {
-       Vec2 new_vel = new Vec2();
-       new_vel.x = vel.x;
-       new_vel.y = vel.y;
-       
-      // println(new_vel);
-       body.setLinearVelocity(new_vel); 
-    }
+    void applyVelocity(Vec2 vel)
+  {
+     Vec2 new_vel = new Vec2();
+     new_vel.x = vel.x;
+     new_vel.y = vel.y;
+     
+    // println(new_vel);
+     body.setLinearVelocity(new_vel); 
+  }
   
   int checkPositiony()
   {
    Vec2 pos = box2d.getBodyPixelCoord(body);
    
-   if(pos.y > (mean_box_height + amplitudes[amp_counter]/2))
+   if(pos.y > (mean_box_height + amplitude/2))
    {
        return -1;
    }
    
-   else if (pos.y < (mean_box_height - amplitudes[amp_counter]/2))
+   else if (pos.y < (mean_box_height - amplitude/2))
    {
      return 1;  
    }
@@ -242,9 +254,14 @@ class Box
    return pos;
   }
   
-    Vec2 checkLinearVelocity()
+  float checkWidth()
   {
-   return body.getLinearVelocity(); 
+   return w; 
+  }
+  
+  float checkHeight()
+  {
+   return h; 
   }
   
     void killBody()

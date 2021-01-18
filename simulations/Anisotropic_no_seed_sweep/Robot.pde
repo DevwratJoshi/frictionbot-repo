@@ -21,7 +21,7 @@ class Robot
   {
     r = radius;
     bigProb = prob;
-    mass = 0.08;
+    mass = 1.0;
     density = d; 
     e = 0.5;
     friction = 0.1;
@@ -263,8 +263,5 @@ class Robot
     //body.applyLinearImpulse(force, body.getWorldCenter(), false);
    body.applyForce(force, body.getWorldCenter());
   }
-  float get_mass()
-  {
-   return body.getMass(); 
-  }
+   
 }

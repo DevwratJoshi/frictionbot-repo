@@ -39,8 +39,8 @@ Vec2 vel = new Vec2();
 boolean box_pause = true;
 
 float density_small = 6.50; // Actual density of the small robot
-float fric_low = 0.15; // Approximate friction of PTFE on PTFE
-float fric_high = 0.15; // 0.36 Friction of rubber on polyurethane (not PTFE, but actual values might be similar)
+float fric_low = 0.14; // Ball bearings on silicone aluminium foil
+float fric_high = 0.36; // Rubber on foil
    
 int delay = 0;
 int record = 0;
@@ -60,8 +60,7 @@ String sep_type = "symmetric"; //or center. This indicates the initial position 
 
 String in_folder = "initial_positions/box_width_15/";
 String in = "initial_positions_";
-//String data_folder = "data/corrected_mass/equal_friction/box_width_15/"; // Remember to move the data files into the appropriate folders
-String data_folder = "delete_this/";
+String data_folder = "data/corrected_mass/actual_friction/box_width_15/"; // Remember to move the data files into the appropriate folders
 String output_data_filename = "";
 PrintWriter output_data, output; // The output file for initial positions, final positions
 
@@ -81,7 +80,7 @@ int ampNumber = 0;
 
 
 boolean exitFlag = false; // exit() does not let the program exit immidiately. It will execute draw one last time, which might be troublesome. 
-// Do not let anything else run if exitFlag is tru3
+// Do not let anything else run if exitFlag is true
 
 boolean to_collect_data = false;
 
@@ -91,20 +90,19 @@ int in_counter_step = 1;
 int in_counter_final = 10;
 
 
-float freqs[] = {0.5};// , 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+float freqs[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+//float freqs[] = {0.3};
 int freq_counter = 0;
-int amplitudes[] = {7*(int)small};//, 2*(int)small,3*(int)small, 4*(int)small, 5*(int)small, 6*(int)small, 7*(int)small, 8*(int)small, 9*(int)small, 10*(int)small};
+int amplitudes[] = {(int)small, 2*(int)small,3*(int)small, 4*(int)small, 5*(int)small, 6*(int)small, 7*(int)small, 8*(int)small, 9*(int)small, 10*(int)small};
+//int amplitudes[] = {(int)small*6};
 int amp_counter = 0;
 
-String seperations[] = {"2","3","4","5", "6", "7"}; // The seperations for which data is available
-
-int seperations_counter = 0; // counter to keep track of which seperation is currently being simulated
 
 int number_of_segregators = 0;
 void setup()
 {
   frameRate(1000);
-  size(2000, 800);
+  size(1200, 800); // (2000, 800) for large box
   smooth();
 
   box2d = new Box2DProcessing(this, 100); /// This is the ratio of pixels to m.
@@ -145,9 +143,17 @@ void draw() {
       /// End creating the box
   
       //////// Creating new robots using data from initial_positions.txt
-      String fname = in_folder + "initial_" + seperations[seperations_counter] + "_" + sep_type + "/initial_" +str(in_counter)  +  extention;
-      println(fname);
-      createRobots(fname);
+      String in_file = in_folder + "initial_"  +str(in_counter)  +  extention;
+      println(in_file);
+      createRobots(in_file);
+      Vec2 bpos = box.checkPos();
+      output_data.println(bpos.x +","+bpos.y); 
+      for(Robot r : robots)
+      {
+        Vec2 rpos = r.checkPos();
+        output_data.println(rpos.x +","+rpos.y + "," + r.type);
+        
+      }
       /////// End of creating robots
       //output_data.println(segregatorPos(true).x + "," + segregatorPos(true).y + "," + segregatorPos(false).x + "," + segregatorPos(false).y + "," + robotCOM().x + "," + robotCOM().y + "," + record);
       //////// Setting delay to zero
@@ -163,7 +169,7 @@ void draw() {
     If the dataCollectMode is made true, the following sequence will be initiated. 
     The following steps are taken
     1) The box is stopped by making boxPause = true
-    2) The function waits for all the robots to stop moving. Set the initial positions of the robots and check that they do not move. 
+    2) The function waits for all the robots to stop moving. Set the initial positions of the robots and check that they do not move.  //<>//
     N.B. Check that the integer values of the postions are the same as the last timestep
   */
   if(!exitFlag)
@@ -183,16 +189,15 @@ void draw() {
        output_data.flush();
       
        steps = 0;
-       record=0;
       
       }
       
       //box_pause = false;
       // Display all the boundaries
-      box.display();
+      //box.display();
       //ground.display();
   
-      displayRobots();
+      //displayRobots();
   
     if(delay == DELAY)
       {
@@ -236,66 +241,22 @@ void draw() {
       }
     
       } /////////End of delay
-      
-      ///////////////////////// Change robot size block
-      //for(int i = robots.size()-1; i >=0; i--)
-      //{
-      // Robot r = robots.get(i);
-      // if(robotInWall(r))
-      // {
-      //   //if(r.isSeed)
-      //   //r.changeRadius(big);
-      //   r.changeFriction(fric_high);
-         
-      //   if(r.type == 'm')
-      //   r.colour = 'y';
-      // }
-       
-      // else
-      // {
-      //  if(r.type == 'm')
-      //  { //<>//
-      //   r.changeRadius(small);
-      //   r.changeFriction(fric_low);
-      //   r.colour = 'g';
-      //  }
-      // }
-       
-      //}
-//////////////////////////// End Change robot size block
-
-    
 
       ///// Start storing data points
-      // Store position every 10th step (10 data_points per second). Too many positions otherwise
-      if(record %10 ==0)
-      {
-        ////////// Start storing segregator positions
-        Vec2 segregator_positions[] = new Vec2[number_of_segregators]; 
+      // Store position every 10th step (10 data_points per second). Too many positions otherwise //<>//
 
-        for(Robot r : robots)
-        {
-            if(r.segregator_id >0)
-            {
-               segregator_positions[r.segregator_id-1] = r.checkPos(); // Segregator ids start from 1
-            }
-        }
-        //////// End storing segregator positions
-        Vec2 curr_box_pos = box.checkPos();
-        for(int i = 0; i < number_of_segregators; i++)
-        {
-          output_data.print((int)segregator_positions[i].x + "," + (int)segregator_positions[i].y+ ",");
-        }
-        output_data.print((int)curr_box_pos.x + "," + (int)curr_box_pos.y + ",");
-        output_data.print("\n");
-        output_data.flush();
-      }
       packing_fraction = 0.;
       if(record >= maxSteps) //|| segregatorsTouching())
       {
         steps = 0;
         record = 0;
-       // output_data.println(segregatorPos(true).x + "," + segregatorPos(true).y + "," + segregatorPos(false).x + "," + segregatorPos(false).y + "," + robotCOM().x + "," + robotCOM().y + "," + record);
+        Vec2 bpos = box.checkPos();
+        output_data.println(bpos.x +","+bpos.y); 
+        for(Robot r : robots)
+        {
+          Vec2 rpos = r.checkPos();
+          output_data.println(rpos.x +","+rpos.y+","+r.type);
+        }
         output_data.flush();
         output_data.close();
 
@@ -464,9 +425,7 @@ void createRobots(String input)
           col = 'r';
           f = fric_high;
           t = 's';
-         
-          
-          //output_data.flush();
+
         }  
         else
         {
@@ -600,22 +559,19 @@ void setSimulationConditions()
          if(freq_counter >= freqs.length)
          {
            freq_counter = 0;
-           seperations_counter += 1;
-          if(seperations_counter >= seperations.length)
-          {
-             seperations_counter = 0;
-             println("This is the end of the program");
-             exitFlag = true;
-             exit();
-           }
+           println("This is the end of the program");
+           exitFlag = true;
+           exit();
+           
         } 
    }
  }
   
-   maxSteps =(int)(30.0 * stepsPerSec/freqs[freq_counter]); // Conduct sim for 30 cycles
+   
    if(!exitFlag)
    {
-     output_data_filename = data_folder + "_freq" + str(freqs[freq_counter]) + "_ampl" + str(amplitudes[amp_counter]) + "_sepr" + seperations[seperations_counter] + "_inpt" + str(in_counter) + extention;
+     maxSteps =(int)(30.0 * stepsPerSec/freqs[freq_counter]); // Conduct sim for 30 cycles
+     output_data_filename = data_folder + "_freq" + str(freqs[freq_counter]) + "_ampl" + str(amplitudes[amp_counter])  + "_inpt" + str(in_counter) + extention;
      output_data = createWriter(output_data_filename);
      
    }

@@ -40,12 +40,12 @@ boolean box_pause = true;
 
 float density_small = 6.50; // Actual density of the small robot
 float fric_low = 0.15; // Approximate friction of PTFE on PTFE
-float fric_high = 0.15; // 0.36 Friction of rubber on polyurethane (not PTFE, but actual values might be similar)
+float fric_high = 0.7; // Friction of rubber on polyurethane (not PTFE, but actual values might be similar)
    
 int delay = 0;
 int record = 0;
-float box_bottom = small*2*15.0;  
-float box_height = small*2*8.0;
+float box_bottom = small*2*11.0;  
+float box_height = small*2*6.0;
 float box_edge_width = 40;
 float mean_box_height;
 Vec2 center_pos, center_velo;
@@ -58,10 +58,10 @@ boolean mouseActive;
 String sep_type = "symmetric"; //or center. This indicates the initial position of the high_friction modules. For center, one is placed at the center of the contrainer. 
 // For symmetric, they are placed symmetric to the vertical line through the center 
 
-String in_folder = "initial_positions/box_width_15/";
+String in_folder = "initial_positions/initial_big/box_width_11/";
 String in = "initial_positions_";
-//String data_folder = "data/corrected_mass/equal_friction/box_width_15/"; // Remember to move the data files into the appropriate folders
-String data_folder = "delete_this/";
+//String data_folder = "data/corrected_mass/initial_big/box_width_11"; // Remember to move the data files into the appropriate folders
+String data_folder = "fake_data";
 String output_data_filename = "";
 PrintWriter output_data, output; // The output file for initial positions, final positions
 
@@ -81,22 +81,22 @@ int ampNumber = 0;
 
 
 boolean exitFlag = false; // exit() does not let the program exit immidiately. It will execute draw one last time, which might be troublesome. 
-// Do not let anything else run if exitFlag is tru3
+// Do not let anything else run if exitFlag is true
 
 boolean to_collect_data = false;
 
 int in_counter = 1;
-int initial_in_counter = 1;
+int initial_in_counter = 6;
 int in_counter_step = 1;
 int in_counter_final = 10;
 
 
-float freqs[] = {0.5};// , 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+float freqs[] = {0.2};//, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
 int freq_counter = 0;
-int amplitudes[] = {7*(int)small};//, 2*(int)small,3*(int)small, 4*(int)small, 5*(int)small, 6*(int)small, 7*(int)small, 8*(int)small, 9*(int)small, 10*(int)small};
+int amplitudes[] = {4*(int)small};//, 2*(int)small,3*(int)small, 4*(int)small, 5*(int)small};
 int amp_counter = 0;
 
-String seperations[] = {"2","3","4","5", "6", "7"}; // The seperations for which data is available
+String seperations[] = {"2"};//,"3","4"}; // The seperations for which data is available
 
 int seperations_counter = 0; // counter to keep track of which seperation is currently being simulated
 
@@ -104,7 +104,7 @@ int number_of_segregators = 0;
 void setup()
 {
   frameRate(1000);
-  size(2000, 800);
+  size(1200, 800);
   smooth();
 
   box2d = new Box2DProcessing(this, 100); /// This is the ratio of pixels to m.
@@ -145,9 +145,8 @@ void draw() {
       /// End creating the box
   
       //////// Creating new robots using data from initial_positions.txt
-      String fname = in_folder + "initial_" + seperations[seperations_counter] + "_" + sep_type + "/initial_" +str(in_counter)  +  extention;
-      println(fname);
-      createRobots(fname);
+      println(in_folder + "initial_x" + seperations[seperations_counter] + "_y0/"  + "/initial_" +str(in_counter)  +  extention);
+      createRobots(in_folder + "initial_x" + seperations[seperations_counter] + "_y0/"  + "/initial_" +str(in_counter)  +  extention);
       /////// End of creating robots
       //output_data.println(segregatorPos(true).x + "," + segregatorPos(true).y + "," + segregatorPos(false).x + "," + segregatorPos(false).y + "," + robotCOM().x + "," + robotCOM().y + "," + record);
       //////// Setting delay to zero
@@ -183,7 +182,6 @@ void draw() {
        output_data.flush();
       
        steps = 0;
-       record=0;
       
       }
       
@@ -240,9 +238,11 @@ void draw() {
       ///////////////////////// Change robot size block
       //for(int i = robots.size()-1; i >=0; i--)
       //{
-      // Robot r = robots.get(i);
-      // if(robotInWall(r))
-      // {
+       //Robot r = robots.get(i);
+       //if(r.type == 's')
+       //{
+        // r.changeRadius(big);
+      // }
       //   //if(r.isSeed)
       //   //r.changeRadius(big);
       //   r.changeFriction(fric_high);
@@ -449,6 +449,7 @@ void createRobots(String input)
  char col;
 
  char t;
+ int rob_num = 0;
   try {
    while ((line = reader.readLine()) != null) 
     {
@@ -462,7 +463,7 @@ void createRobots(String input)
         {
           d = density_small;
           col = 'r';
-          f = fric_high;
+          f = fric_low;
           t = 's';
          
           
