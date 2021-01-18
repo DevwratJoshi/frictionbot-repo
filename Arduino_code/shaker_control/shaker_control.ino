@@ -1,3 +1,6 @@
+
+#include <Wire.h>               
+#include "SparkFun_MMA8452Q.h"  
 int PUL=10; //define Pulse pin
 int DIR=9; //define Direction pin
 int ENA=5; //define Enable Pin
@@ -17,10 +20,10 @@ int velocityDirection = 0; // Will move toward the motor first
 int steps_per_velocity_value = 0; 
 int steps_per_direction = 0;
 bool move_flag = false;
-int cycle_count = 0;
-int max_cycle_count = 0;
 // This function will return a positive velocity if the direction of velocity is toward the motor and -1 if away from the motor
 // The initial velocity is always woward the motor
+
+MMA8452Q accel; // To collect container acceleration data
 
 float calculate_position_from_step(int current_step)
 {
@@ -69,16 +72,6 @@ float calculate_velocity(float pos, float freq, float amplitude)
   } 
   else if (pos < 0)
   {
-    if(velocityDirection == -1)
-    {
-       // This means the velocity is switching over to positive here
-       // Use this to count the number of robot cycles
-       cycle_count += 1;
-       if(cycle_count >= max_cycle_count)
-       {
-        move_flag = false;
-       }
-    }
     new_velocity = constVelo; 
     velocityDirection = 1;
   }
@@ -90,7 +83,7 @@ float calculate_velocity(float pos, float freq, float amplitude)
     //new_velocity = maxVelo*sin(map(pos, 0.0, amplitude*2.0, radians(6), PI-radians(6)));
     // Using linear interpolation instead of mapping
     
-    float interp_pos = interpolate1D(pos, 0.0, amplitude*2.0, -amplitude+0.0001, amplitude-0.0001);
+    float interp_pos = interpolate1D(pos, 0.0, amplitude*2.0, -amplitude+0.001, amplitude-0.001);
     new_velocity = 2*PI*freq*sqrt(amplitude*amplitude - interp_pos*interp_pos); //////// New line 
     
     if (velocityDirection == -1)
@@ -109,7 +102,7 @@ void setup()
   pinMode (PUL, OUTPUT);
   pinMode (DIR, OUTPUT);
   pinMode (ENA, OUTPUT);
-  Serial.begin(115200);
+  Serial.begin(115200); 
   PUL=10; //define Pulse pin
   DIR=9; //define Direction pin
   ENA=5; //define Enable Pin
@@ -120,13 +113,9 @@ void setup()
   distance_per_step = distance_per_rotation/steps_per_rotation;
   steps_per_metre = steps_per_rotation/distance_per_rotation;
   // Set amplitude to 30 cm
-  
-  amplitude = 0.055; // IMP: This is the peak amplitude and not the peak-to-peak amplitude 
-  frequency = 0.6;
-  max_cycle_count = 1; // Set the number of cycles
+  amplitude = 0.12; // IMP: This is the peak amplitude and not the peak-to-peak amplitude 
+  frequency = 0.7;
   current_step = 0;
-  cycle_count = 0;
-  
   velocityDirection = 1; // Will move toward the motor first
   // This many steps will be taken for one velocity value (90 steps is about 1mm) 
   // It is not worth calculating a new velocity for each new step since each step is so small
@@ -134,6 +123,8 @@ void setup()
   steps_per_direction = amplitude * steps_per_rotation/distance_per_rotation;
   move_flag = false;
   //TODO: Add block to initialize stage position
+  
+  accel.init(SCALE_2G, ODR_12); /// Initialize accelerometer
 }
 // The delay is inversely proportional to the velocity. 
 // A smaller deley means a larger velocity.
@@ -158,7 +149,7 @@ void loop()
   if(move_flag)
   {                                     
       float velocity = calculate_velocity(calculate_position_from_step(current_step), frequency, amplitude);
-      Serial.println(velocity);
+      
       int count_direction = 1; // Whether to increase or decrease the current steps. Depends on the direction of the velocity
       if(velocity < 0.0)
       {
@@ -190,6 +181,14 @@ void loop()
         }
         current_step = current_step + count_direction*steps_per_velocity_value;
       }  
+
+//      if(accel.available())
+//      {
+//        Serial.println(accel.getX());
+//        //Serial.print(",");
+//        //Serial.print(millis());
+//        //Serial.println();
+//      }
   }
   else
   {
